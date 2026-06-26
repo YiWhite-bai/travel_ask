@@ -1,0 +1,3256 @@
+# ============================================================
+# 旅游平台元数据知识库配置
+# ============================================================
+
+tables:
+
+  # ==========================================================
+  # 基础维度
+  # ==========================================================
+
+  - name: areas
+    role: dim
+    description: 地区维表，维护省、市、区县三级行政区域，用于按地区维度筛选和分组统计数据。
+    columns:
+      - name: id
+        role: primary_key
+        description: 地区主键ID。
+        alias: [地区ID]
+        sync: false
+
+      - name: area_code
+        role: dimension
+        description: 地区编码，业务唯一标识。
+        alias: [地区编码, 区域编码]
+        sync: false
+
+      - name: area_name
+        role: dimension
+        description: 地区名称，如广东省、深圳市等。
+        alias: [地区名称, 地区, 区域, 城市, 目的地, 所在城市, 省份]
+        sync: true
+
+      - name: area_full_name
+        role: dimension
+        description: 地区全称，完整行政区名称路径，如"广东省/深圳市/南山区"。用于模糊匹配所有下级地区，如 area_full_name LIKE '北京市%' 可匹配北京市及所有区县。
+        alias: [地区全称, 完整地址, 行政区全称, 地区路径]
+        sync: true
+
+      - name: parent_id
+        role: foreign_key
+        description: 父级地区ID，自关联areas.id。level=1时为空，level>1时不为空。
+        alias: [上级地区ID, 父级地区]
+        sync: false
+
+      - name: level
+        role: dimension
+        description: 地区层级，1=省级，2=地市级，3=区县级。
+        alias: [地区层级, 层级, 行政区级别]
+        sync: false
+
+      - name: postal_code
+        role: dimension
+        description: 邮政编码。
+        alias: [邮编, 邮政编码, 邮政编号]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [地区状态, 状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [地区创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [地区更新时间]
+        sync: false
+
+
+  - name: currencies
+    role: dim
+    description: 币种维表，维护金额展示与结算使用的币种信息，如人民币、美元等。
+    columns:
+      - name: id
+        role: primary_key
+        description: 币种主键ID。
+        alias: [币种ID]
+        sync: false
+
+      - name: currency_code
+        role: dimension
+        description: 币种代码，如CNY、USD。
+        alias: [币种编码, 货币代码, 币种]
+        sync: true
+
+      - name: currency_name
+        role: dimension
+        description: 币种名称，如人民币、美元。
+        alias: [币种名称, 货币名称]
+        sync: true
+
+      - name: symbol
+        role: dimension
+        description: 币种符号，如¥、$。
+        alias: [货币符号, 币种符号]
+        sync: true
+
+      - name: precision_scale
+        role: dimension
+        description: 金额精度位数。
+        alias: [精度, 小数位数]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [币种状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: channels
+    role: dim
+    description: 渠道维表，定义App、Web、小程序、H5等下单渠道，用于按渠道维度分析订单来源。
+    columns:
+      - name: id
+        role: primary_key
+        description: 渠道主键ID。
+        alias: [渠道ID]
+        sync: false
+
+      - name: channel_code
+        role: dimension
+        description: 渠道编码，如app、web、miniapp、h5。
+        alias: [渠道编码]
+        sync: false
+
+      - name: channel_name
+        role: dimension
+        description: 渠道名称，如App、Web站、小程序、H5页。
+        alias: [渠道名称, 渠道, 来源渠道, 下单渠道]
+        sync: true
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [渠道状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: transport_hubs
+    role: dim
+    description: 交通枢纽维表，维护机场、火车站、汽车站等交通枢纽信息，用于交通线路的出发到达站点关联。
+    columns:
+      - name: id
+        role: primary_key
+        description: 交通枢纽主键ID。
+        alias: [枢纽ID]
+        sync: false
+
+      - name: hub_code
+        role: dimension
+        description: 枢纽编码，业务唯一标识。
+        alias: [枢纽编码]
+        sync: false
+
+      - name: hub_name
+        role: dimension
+        description: 枢纽名称，如"上海虹桥国际机场"、"北京南站"。
+        alias: [枢纽名称, 站点名称, 站点, 机场名, 火车站名]
+        sync: true
+
+      - name: hub_type_code
+        role: dimension
+        description: 枢纽类型，airport=机场，railway_station=火车站，bus_station=汽车站。
+        alias: [枢纽类型, 站点类型, 交通枢纽类型]
+        sync: true
+
+      - name: city_area_id
+        role: foreign_key
+        description: 所属城市地区ID，关联areas.id（城市级）。
+        alias: [所在城市ID, 枢纽城市]
+        sync: false
+
+      - name: address
+        role: dimension
+        description: 枢纽地址。
+        alias: [枢纽地址, 站点地址]
+        sync: false
+
+      - name: latitude
+        role: dimension
+        description: 纬度。
+        alias: [纬度, 纬度坐标]
+        sync: false
+
+      - name: longitude
+        role: dimension
+        description: 经度。
+        alias: [经度, 经度坐标]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [枢纽状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: suppliers
+    role: dim
+    description: 供应商主表，存储酒店、景点、交通等供给方主体信息，用于按供应商维度统计订单和收入。
+    columns:
+      - name: id
+        role: primary_key
+        description: 供应商主键ID。
+        alias: [供应商ID]
+        sync: false
+
+      - name: supplier_code
+        role: dimension
+        description: 供应商编码，业务唯一标识。
+        alias: [供应商编码]
+        sync: false
+
+      - name: supplier_name
+        role: dimension
+        description: 供应商名称。
+        alias: [供应商名称, 供应商, 供给方]
+        sync: true
+
+      - name: supplier_type_code
+        role: dimension
+        description: 供应商类型，hotel=酒店，scenic=景点，flight=机票，train=火车票，bus=汽车票，transfer=接送。
+        alias: [供应商类型, 供给类型]
+        sync: true
+
+      - name: area_id
+        role: foreign_key
+        description: 所属地区ID，关联areas.id。
+        alias: [供应商地区ID, 所属地区]
+        sync: false
+
+      - name: contact_name
+        role: dimension
+        description: 联系人姓名。
+        alias: [联系人, 联系人姓名]
+        sync: false
+
+      - name: contact_phone
+        role: dimension
+        description: 联系人电话。
+        alias: [联系电话, 联系人电话]
+        sync: false
+
+      - name: contact_email
+        role: dimension
+        description: 联系人邮箱。
+        alias: [联系邮箱]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [供应商状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  # ==========================================================
+  # 用户域
+  # ==========================================================
+
+  - name: users
+    role: dim
+    description: 用户主表，存储用户基础信息，用于按用户维度和注册地区维度分析。
+    columns:
+      - name: id
+        role: primary_key
+        description: 用户主键ID。
+        alias: [用户ID, 会员ID]
+        sync: false
+
+      - name: nickname
+        role: dimension
+        description: 用户昵称。
+        alias: [昵称, 用户名]
+        sync: true
+
+      - name: avatar_url
+        role: dimension
+        description: 头像地址。
+        alias: [头像, 头像URL]
+        sync: false
+
+      - name: phone
+        role: dimension
+        description: 手机号。
+        alias: [手机号, 电话, 联系方式]
+        sync: false
+
+      - name: email
+        role: dimension
+        description: 邮箱。
+        alias: [邮箱, 电子邮件, Email]
+        sync: false
+
+      - name: gender_code
+        role: dimension
+        description: 性别，male=男，female=女，unknown=未知。
+        alias: [性别]
+        sync: true
+
+      - name: birth_date
+        role: dimension
+        description: 出生日期。
+        alias: [出生日期, 生日]
+        sync: false
+
+      - name: register_area_id
+        role: foreign_key
+        description: 注册地区ID，关联areas.id（城市级）。
+        alias: [注册地区ID, 注册城市ID]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 用户状态，normal=正常，vip=VIP用户，inactive=已停用。
+        alias: [用户状态, 账号状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间（注册时间）。
+        alias: [注册时间, 创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: user_profiles
+    role: dim
+    description: 用户实名资料表，与users一对一，存储真实姓名、证件号、职业、偏好等扩展信息。
+    columns:
+      - name: id
+        role: primary_key
+        description: 资料主键ID。
+        alias: [资料ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 用户ID，关联users.id。
+        alias: [用户ID]
+        sync: false
+
+      - name: real_name
+        role: dimension
+        description: 真实姓名。
+        alias: [真实姓名, 姓名, 实名]
+        sync: false
+
+      - name: identity_no
+        role: dimension
+        description: 证件号码。
+        alias: [证件号, 身份证号, 护照号]
+        sync: false
+
+      - name: identity_type_code
+        role: dimension
+        description: 证件类型，id_card=居民身份证，passport=护照。
+        alias: [证件类型]
+        sync: true
+
+      - name: residence_city_name
+        role: dimension
+        description: 居住地全名，完整行政区名称，如"上海市/浦东新区"。
+        alias: [居住地, 居住城市, 所在地]
+        sync: true
+
+      - name: occupation
+        role: dimension
+        description: 职业。
+        alias: [职业, 工作, 行业]
+        sync: true
+
+      - name: preference_payload
+        role: dimension
+        description: 偏好配置，JSON格式存储用户偏好标签。
+        alias: [偏好, 用户偏好, 偏好设置]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: travelers
+    role: dim
+    description: 常用出行人表，维护用户可复用的真实出行人资料（乘机人、入住人、游客等），一个用户可有多名出行人。
+    columns:
+      - name: id
+        role: primary_key
+        description: 出行人主键ID。
+        alias: [出行人ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 所属用户ID，关联users.id。
+        alias: [用户ID, 所属用户]
+        sync: false
+
+      - name: traveler_name
+        role: dimension
+        description: 出行人姓名。
+        alias: [出行人姓名, 旅客姓名, 乘机人, 入住人]
+        sync: true
+
+      - name: identity_no
+        role: dimension
+        description: 证件号码。
+        alias: [证件号, 身份证号]
+        sync: false
+
+      - name: identity_type_code
+        role: dimension
+        description: 证件类型，id_card=居民身份证，passport=护照。
+        alias: [证件类型]
+        sync: true
+
+      - name: gender_code
+        role: dimension
+        description: 性别，male=男，female=女。
+        alias: [性别]
+        sync: true
+
+      - name: birth_date
+        role: dimension
+        description: 出生日期。
+        alias: [出生日期, 生日]
+        sync: false
+
+      - name: phone
+        role: dimension
+        description: 联系手机号。
+        alias: [手机号, 联系电话]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [出行人状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: member_accounts
+    role: dim
+    description: 会员账户表，与users一对一，存储会员等级、积分余额、成长值等信息。
+    columns:
+      - name: id
+        role: primary_key
+        description: 会员账户主键ID。
+        alias: [会员账户ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 用户ID，关联users.id。
+        alias: [用户ID, 会员用户ID]
+        sync: false
+
+      - name: member_level_code
+        role: dimension
+        description: 会员等级，normal=普通会员（growth_value<5000），silver=银卡会员（5000-12000），gold=金卡会员（>=12000）。
+        alias: [会员等级, 会员级别, VIP等级]
+        sync: true
+
+      - name: points_balance
+        role: measure
+        description: 当前积分余额。
+        alias: [积分余额, 当前积分, 可用积分]
+        sync: false
+
+      - name: total_points
+        role: measure
+        description: 累计获得积分总量。
+        alias: [累计积分, 总积分, 历史总积分]
+        sync: false
+
+      - name: growth_value
+        role: measure
+        description: 成长值，决定会员等级。
+        alias: [成长值, 会员成长值]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: member_point_ledger
+    role: fact
+    description: 积分流水表，记录积分发放、扣减和余额变动记录，每次积分变动产生一条记录。
+    columns:
+      - name: id
+        role: primary_key
+        description: 积分流水主键ID。
+        alias: [积分流水ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 用户ID，关联users.id。
+        alias: [用户ID]
+        sync: false
+
+      - name: ledger_type_code
+        role: dimension
+        description: 流水类型，signup_bonus=注册奖励，order_earn=订单消费获积分，order_earn_revoke=退款撤销积分，point_redeem=积分抵扣，expire=积分过期，admin_adjust=管理员调整。
+        alias: [积分流水类型, 积分变动类型, 流水类型]
+        sync: true
+
+      - name: points_delta
+        role: measure
+        description: 积分变动量，正数为增加，负数为扣减。
+        alias: [积分变动, 积分增减, 积分变化量]
+        sync: false
+
+      - name: balance_after
+        role: measure
+        description: 变动后积分余额。
+        alias: [变动后余额, 积分余额, 余额]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 流水发生时间。
+        alias: [积分变动时间, 流水时间, 发生时间]
+        sync: false
+
+
+  # ==========================================================
+  # 酒店域
+  # ==========================================================
+
+  - name: hotels
+    role: dim
+    description: 酒店主表，存储酒店基础信息、星级、类型、设施和地区信息，用于按酒店维度统计订单数据。
+    columns:
+      - name: id
+        role: primary_key
+        description: 酒店主键ID。
+        alias: [酒店ID]
+        sync: false
+
+      - name: hotel_code
+        role: dimension
+        description: 酒店编码，业务唯一标识。
+        alias: [酒店编码]
+        sync: false
+
+      - name: hotel_name
+        role: dimension
+        description: 酒店名称。
+        alias: [酒店名称, 酒店, 酒店名, 住宿]
+        sync: true
+
+      - name: hotel_type_code
+        role: dimension
+        description: 酒店类型，luxury=豪华型，business=商务型，resort=度假型，boutique=精品型。
+        alias: [酒店类型, 酒店类别]
+        sync: true
+
+      - name: star_rating_code
+        role: dimension
+        description: 星级，3=三星，4=四星，5=五星。
+        alias: [星级, 酒店星级, 酒店等级]
+        sync: true
+
+      - name: area_id
+        role: foreign_key
+        description: 所属城市地区ID，关联areas.id（城市级）。
+        alias: [所在城市ID, 酒店地区ID, 酒店城市]
+        sync: false
+
+      - name: address
+        role: dimension
+        description: 酒店地址。
+        alias: [地址, 酒店地址]
+        sync: false
+
+      - name: latitude
+        role: dimension
+        description: 纬度坐标。
+        alias: [纬度]
+        sync: false
+
+      - name: longitude
+        role: dimension
+        description: 经度坐标。
+        alias: [经度]
+        sync: false
+
+      - name: summary
+        role: dimension
+        description: 酒店简介。
+        alias: [简介, 酒店简介, 描述]
+        sync: false
+
+      - name: facility_payload
+        role: dimension
+        description: 设施标签，JSON数组，如["wifi","parking","breakfast","gym"]。
+        alias: [设施, 酒店设施, 配套设施]
+        sync: false
+
+      - name: check_in_time
+        role: dimension
+        description: 最早入住时间。
+        alias: [入住时间, 最早入住, checkin时间]
+        sync: false
+
+      - name: check_out_time
+        role: dimension
+        description: 最晚退房时间。
+        alias: [退房时间, 最晚退房, checkout时间]
+        sync: false
+
+      - name: contact_phone
+        role: dimension
+        description: 联系电话。
+        alias: [酒店电话, 联系电话]
+        sync: false
+
+      - name: supplier_id
+        role: foreign_key
+        description: 供应商ID，关联suppliers.id（supplier_type_code=hotel）。
+        alias: [供应商ID, 酒店供应商]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [酒店状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: hotel_room_types
+    role: dim
+    description: 酒店房型表，维护每家酒店下的可售房型定义，包含房型名称、面积、床型、可住人数等信息。
+    columns:
+      - name: id
+        role: primary_key
+        description: 房型主键ID。
+        alias: [房型ID]
+        sync: false
+
+      - name: hotel_id
+        role: foreign_key
+        description: 所属酒店ID，关联hotels.id。
+        alias: [酒店ID, 所属酒店]
+        sync: false
+
+      - name: room_type_code
+        role: dimension
+        description: 房型编码，业务唯一标识，格式如HOTEL000001_DBL_01。
+        alias: [房型编码]
+        sync: false
+
+      - name: room_type_name
+        role: dimension
+        description: 房型名称，大床房/双床房/套房/家庭房。
+        alias: [房型名称, 房型, 房间类型]
+        sync: true
+
+      - name: room_type_category_code
+        role: dimension
+        description: 房型分类，double=大床房，twin=双床房，suite=套房，family=家庭房。
+        alias: [房型分类, 房型类别]
+        sync: true
+
+      - name: area_size
+        role: measure
+        description: 房间面积（平方米）。
+        alias: [面积, 房间面积, 平米]
+        sync: false
+
+      - name: max_guests
+        role: measure
+        description: 最大入住人数。
+        alias: [最大入住人数, 可住人数, 容纳人数]
+        sync: false
+
+      - name: amenity_payload
+        role: dimension
+        description: 房间设施，JSON数组，如["window","desk","bathroom","tv"]。
+        alias: [房间设施, 房型设施, 设施]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [房型状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: hotel_booking_rules
+    role: dim
+    description: 酒店预订规则表，与hotels一对一，存储最晚保留时间、最少连住天数等规则。
+    columns:
+      - name: id
+        role: primary_key
+        description: 规则主键ID。
+        alias: [规则ID]
+        sync: false
+
+      - name: hotel_id
+        role: foreign_key
+        description: 所属酒店ID，关联hotels.id。
+        alias: [酒店ID]
+        sync: false
+
+      - name: hold_until_time
+        role: dimension
+        description: 最晚保留房间时间。
+        alias: [最晚保留时间, 保留时间]
+        sync: false
+
+      - name: min_stay_nights
+        role: measure
+        description: 最少连住天数。
+        alias: [最少连住, 最低入住天数, 最少住几晚]
+        sync: false
+
+      - name: max_room_count
+        role: measure
+        description: 单次最多预订间数。
+        alias: [最多预订间数, 最大间数]
+        sync: false
+
+      - name: rule_payload
+        role: dimension
+        description: 扩展规则配置，JSON格式，如取消规则、发票支持等。
+        alias: [预订规则, 扩展规则]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [规则状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: hotel_room_daily
+    role: fact
+    description: 酒店房态房价日历表，存储房型按天的库存与价格快照。业务日期跨度T-730到T+90。
+    columns:
+      - name: id
+        role: primary_key
+        description: 日历主键ID。
+        alias: [日历ID]
+        sync: false
+
+      - name: room_type_id
+        role: foreign_key
+        description: 房型ID，关联hotel_room_types.id。
+        alias: [房型ID]
+        sync: false
+
+      - name: business_date
+        role: dimension
+        description: 业务日期。
+        alias: [业务日期, 日期, 入住日期, 房价日期]
+        sync: false
+
+      - name: total_inventory
+        role: measure
+        description: 总库存。
+        alias: [总库存, 库存总量]
+        sync: false
+
+      - name: available_inventory
+        role: measure
+        description: 可售库存。
+        alias: [可售库存, 可用库存, 剩余房间数]
+        sync: false
+
+      - name: reserved_inventory
+        role: measure
+        description: 预占库存。
+        alias: [预占库存, 已预订库存]
+        sync: false
+
+      - name: sold_inventory
+        role: measure
+        description: 已售库存。
+        alias: [已售库存, 已卖出库存]
+        sync: false
+
+      - name: currency_code
+        role: foreign_key
+        description: 币种编码，关联currencies.currency_code。
+        alias: [币种, 货币]
+        sync: false
+
+      - name: sale_price_amount
+        role: measure
+        description: 销售价，用户实际支付的房价。
+        alias: [销售价, 房价, 售价, 每晚价格]
+        sync: false
+
+      - name: settlement_price_amount
+        role: measure
+        description: 结算价，平台向供应商支付的费用。
+        alias: [结算价, 结算金额, 供应价]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [房态状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  # ==========================================================
+  # 景点域
+  # ==========================================================
+
+  - name: scenic_spots
+    role: dim
+    description: 景点主表，存储景点基础信息、等级、类型和地区信息，用于按景点维度统计门票订单数据。
+    columns:
+      - name: id
+        role: primary_key
+        description: 景点主键ID。
+        alias: [景点ID]
+        sync: false
+
+      - name: scenic_code
+        role: dimension
+        description: 景点编码，业务唯一标识。
+        alias: [景点编码]
+        sync: false
+
+      - name: scenic_name
+        role: dimension
+        description: 景点名称。
+        alias: [景点名称, 景点, 景区, 景区名称]
+        sync: true
+
+      - name: scenic_type_code
+        role: dimension
+        description: 景点类型，theme_park=主题公园，museum=博物馆，mountain=山地景区，heritage=文化遗产，beach=海滨景区，zoo=动物园等。
+        alias: [景点类型, 景区类型]
+        sync: true
+
+      - name: rating_code
+        role: dimension
+        description: 景区等级，5A=5A级，4A=4A级，3A=3A级。
+        alias: [景区等级, 等级, 景点级别]
+        sync: true
+
+      - name: area_id
+        role: foreign_key
+        description: 所属城市地区ID，关联areas.id（城市级）。
+        alias: [所在城市ID, 景点地区ID]
+        sync: false
+
+      - name: address
+        role: dimension
+        description: 景点地址。
+        alias: [地址, 景点地址]
+        sync: false
+
+      - name: latitude
+        role: dimension
+        description: 纬度坐标。
+        alias: [纬度]
+        sync: false
+
+      - name: longitude
+        role: dimension
+        description: 经度坐标。
+        alias: [经度]
+        sync: false
+
+      - name: summary
+        role: dimension
+        description: 景点简介。
+        alias: [简介, 景点简介, 描述]
+        sync: false
+
+      - name: tag_payload
+        role: dimension
+        description: 标签列表，JSON数组，如["family","sightseeing","culture"]。
+        alias: [标签, 景点标签, 特色标签]
+        sync: false
+
+      - name: open_time
+        role: dimension
+        description: 每日开放时间。
+        alias: [开放时间, 开门时间, 营业开始时间]
+        sync: false
+
+      - name: close_time
+        role: dimension
+        description: 每日关闭时间。
+        alias: [关闭时间, 关门时间, 营业结束时间]
+        sync: false
+
+      - name: supplier_id
+        role: foreign_key
+        description: 供应商ID，关联suppliers.id（supplier_type_code=scenic）。
+        alias: [供应商ID, 景点供应商]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [景点状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: scenic_ticket_types
+    role: dim
+    description: 景点票种表，维护成人票、学生票、家庭票、夜场票等票种定义。
+    columns:
+      - name: id
+        role: primary_key
+        description: 票种主键ID。
+        alias: [票种ID]
+        sync: false
+
+      - name: scenic_spot_id
+        role: foreign_key
+        description: 所属景点ID，关联scenic_spots.id。
+        alias: [景点ID, 所属景点]
+        sync: false
+
+      - name: ticket_type_code
+        role: dimension
+        description: 票种编码，格式如SCENIC000001_ADULT_01。
+        alias: [票种编码]
+        sync: false
+
+      - name: ticket_type_name
+        role: dimension
+        description: 票种名称，成人票/学生票/家庭票/夜场票。
+        alias: [票种名称, 票种, 门票类型]
+        sync: true
+
+      - name: ticket_category_code
+        role: dimension
+        description: 票种分类，adult=成人票，student=学生票，family=家庭票，night=夜场票。
+        alias: [票种分类, 票种类别]
+        sync: true
+
+      - name: benefit_payload
+        role: dimension
+        description: 权益描述，JSON格式，如入园次数、退票规则等。
+        alias: [权益, 票种权益]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [票种状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: scenic_booking_rules
+    role: dim
+    description: 景点预订规则表，与scenic_spots一对一，存储最晚预订时间、退票规则等配置。
+    columns:
+      - name: id
+        role: primary_key
+        description: 规则主键ID。
+        alias: [规则ID]
+        sync: false
+
+      - name: scenic_spot_id
+        role: foreign_key
+        description: 所属景点ID，关联scenic_spots.id。
+        alias: [景点ID]
+        sync: false
+
+      - name: latest_booking_time
+        role: dimension
+        description: 最晚预订时间。
+        alias: [最晚预订时间, 截止预订时间]
+        sync: false
+
+      - name: rule_payload
+        role: dimension
+        description: 扩展规则配置，JSON格式，如退票规则等。
+        alias: [预订规则, 退票规则]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [规则状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: scenic_ticket_daily
+    role: fact
+    description: 景点票日历表，存储票种按天的库存与价格快照。业务日期跨度T-730到T+90。
+    columns:
+      - name: id
+        role: primary_key
+        description: 日历主键ID。
+        alias: [日历ID]
+        sync: false
+
+      - name: ticket_type_id
+        role: foreign_key
+        description: 票种ID，关联scenic_ticket_types.id。
+        alias: [票种ID]
+        sync: false
+
+      - name: business_date
+        role: dimension
+        description: 业务日期。
+        alias: [业务日期, 日期, 游玩日期]
+        sync: false
+
+      - name: total_inventory
+        role: measure
+        description: 总库存。
+        alias: [总库存, 库存总量]
+        sync: false
+
+      - name: available_inventory
+        role: measure
+        description: 可售库存。
+        alias: [可售库存, 可用库存, 剩余票数]
+        sync: false
+
+      - name: reserved_inventory
+        role: measure
+        description: 预占库存。
+        alias: [预占库存]
+        sync: false
+
+      - name: sold_inventory
+        role: measure
+        description: 已售库存。
+        alias: [已售库存, 已售出票数]
+        sync: false
+
+      - name: currency_code
+        role: foreign_key
+        description: 币种编码，关联currencies.currency_code。
+        alias: [币种, 货币]
+        sync: false
+
+      - name: sale_price_amount
+        role: measure
+        description: 销售价，用户实际支付的门票价格。
+        alias: [销售价, 票价, 售价, 门票价格]
+        sync: false
+
+      - name: settlement_price_amount
+        role: measure
+        description: 结算价，平台向供应商支付的费用。
+        alias: [结算价, 结算金额, 供应价]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [票日历状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  # ==========================================================
+  # 交通域 — 机票
+  # ==========================================================
+
+  - name: flight_routes
+    role: dim
+    description: 航线主表，存储航班号、出发到达城市和枢纽、航司等信息，用于按航线维度统计机票订单数据。
+    columns:
+      - name: id
+        role: primary_key
+        description: 航线主键ID。
+        alias: [航线ID]
+        sync: false
+
+      - name: route_code
+        role: dimension
+        description: 航线编码，业务唯一标识。
+        alias: [航线编码]
+        sync: false
+
+      - name: flight_no
+        role: dimension
+        description: 航班号。
+        alias: [航班号, 航班]
+        sync: true
+
+      - name: airline_code
+        role: dimension
+        description: 航司编码，如MU=东方航空，CA=中国国航，CZ=南方航空等。
+        alias: [航司, 航空公司, 航空]
+        sync: true
+
+      - name: supplier_id
+        role: foreign_key
+        description: 供应商ID，关联suppliers.id（supplier_type_code=flight）。
+        alias: [供应商ID, 航司供应商]
+        sync: false
+
+      - name: departure_hub_id
+        role: foreign_key
+        description: 出发枢纽ID，关联transport_hubs.id（hub_type_code=airport）。
+        alias: [出发机场ID, 起飞机场ID]
+        sync: false
+
+      - name: arrival_hub_id
+        role: foreign_key
+        description: 到达枢纽ID，关联transport_hubs.id（hub_type_code=airport）。
+        alias: [到达机场ID, 降落机场ID]
+        sync: false
+
+      - name: departure_area_id
+        role: foreign_key
+        description: 出发城市地区ID，关联areas.id（城市级）。
+        alias: [出发城市ID, 出发地ID, 起飞城市]
+        sync: false
+
+      - name: arrival_area_id
+        role: foreign_key
+        description: 到达城市地区ID，关联areas.id（城市级）。
+        alias: [到达城市ID, 目的地ID, 降落城市]
+        sync: false
+
+      - name: duration_minutes
+        role: measure
+        description: 飞行时长（分钟）。
+        alias: [飞行时长, 飞行时间, 航程时间]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [航线状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: flight_departures
+    role: fact
+    description: 航班实例表，存储具体航班日期、起飞时间、到达时间等信息。出发时间跨度T-730到T+90。
+    columns:
+      - name: id
+        role: primary_key
+        description: 航班实例主键ID。
+        alias: [航班实例ID, 航班班次ID]
+        sync: false
+
+      - name: flight_route_id
+        role: foreign_key
+        description: 航线ID，关联flight_routes.id。
+        alias: [航线ID]
+        sync: false
+
+      - name: departure_instance_code
+        role: dimension
+        description: 航班实例编码，业务唯一标识。
+        alias: [航班实例编码, 班次编码]
+        sync: false
+
+      - name: departure_time
+        role: dimension
+        description: 出发时间（起飞时间）。
+        alias: [出发时间, 起飞时间, 航班出发时间]
+        sync: false
+
+      - name: arrival_time
+        role: dimension
+        description: 到达时间（降落时间）。
+        alias: [到达时间, 降落时间, 航班到达时间]
+        sync: false
+
+      - name: rule_payload
+        role: dimension
+        description: 扩展规则，JSON格式，如免费行李额、餐食等。
+        alias: [航班规则, 行李规则]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 班次状态，scheduled=已排班，cancelled=已取消，done=已完成。
+        alias: [航班状态, 班次状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: flight_cabin_inventory
+    role: fact
+    description: 航班舱位库存表，存储具体航班实例下各舱位的库存和价格。
+    columns:
+      - name: id
+        role: primary_key
+        description: 舱位库存主键ID。
+        alias: [舱位库存ID]
+        sync: false
+
+      - name: flight_departure_id
+        role: foreign_key
+        description: 航班实例ID，关联flight_departures.id。
+        alias: [航班实例ID]
+        sync: false
+
+      - name: cabin_class_code
+        role: dimension
+        description: 舱位等级，economy=经济舱，business=商务舱。
+        alias: [舱位, 舱位等级, 舱等]
+        sync: true
+
+      - name: currency_code
+        role: foreign_key
+        description: 币种编码，关联currencies.currency_code。
+        alias: [币种]
+        sync: false
+
+      - name: sale_price_amount
+        role: measure
+        description: 销售价，机票售价。
+        alias: [销售价, 票价, 机票价格, 售价]
+        sync: false
+
+      - name: settlement_price_amount
+        role: measure
+        description: 结算价，平台向供应商支付的费用。
+        alias: [结算价, 结算金额]
+        sync: false
+
+      - name: total_inventory
+        role: measure
+        description: 总库存（总座位数）。
+        alias: [总库存, 总座位数]
+        sync: false
+
+      - name: available_inventory
+        role: measure
+        description: 可售库存（可售座位数）。
+        alias: [可售库存, 剩余座位, 可售座位]
+        sync: false
+
+      - name: reserved_inventory
+        role: measure
+        description: 预占库存。
+        alias: [预占库存]
+        sync: false
+
+      - name: sold_inventory
+        role: measure
+        description: 已售库存。
+        alias: [已售库存, 已售座位]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [库存状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  # ==========================================================
+  # 交通域 — 火车票
+  # ==========================================================
+
+  - name: train_routes
+    role: dim
+    description: 火车线路主表，存储车次号、出发到达站点和城市、供应商等信息，用于按火车线路维度统计订单数据。
+    columns:
+      - name: id
+        role: primary_key
+        description: 火车线路主键ID。
+        alias: [火车线路ID]
+        sync: false
+
+      - name: route_code
+        role: dimension
+        description: 线路编码。
+        alias: [线路编码]
+        sync: false
+
+      - name: train_no
+        role: dimension
+        description: 车次号。
+        alias: [车次号, 车次, 火车, 列车号]
+        sync: true
+
+      - name: supplier_id
+        role: foreign_key
+        description: 供应商ID，关联suppliers.id（supplier_type_code=train）。
+        alias: [供应商ID]
+        sync: false
+
+      - name: departure_hub_id
+        role: foreign_key
+        description: 出发站点ID，关联transport_hubs.id（hub_type_code=railway_station）。
+        alias: [出发站ID, 始发站ID]
+        sync: false
+
+      - name: arrival_hub_id
+        role: foreign_key
+        description: 到达站点ID，关联transport_hubs.id（hub_type_code=railway_station）。
+        alias: [到达站ID, 终点站ID]
+        sync: false
+
+      - name: departure_area_id
+        role: foreign_key
+        description: 出发城市地区ID，关联areas.id（城市级）。
+        alias: [出发城市ID, 出发地ID]
+        sync: false
+
+      - name: arrival_area_id
+        role: foreign_key
+        description: 到达城市地区ID，关联areas.id（城市级）。
+        alias: [到达城市ID, 目的地ID]
+        sync: false
+
+      - name: duration_minutes
+        role: measure
+        description: 运行时长（分钟）。
+        alias: [运行时长, 行程时间, 耗时]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [线路状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: train_departures
+    role: fact
+    description: 火车班次实例表，存储具体开车时间、到达时间等信息。出发时间跨度T-730到T+90。
+    columns:
+      - name: id
+        role: primary_key
+        description: 班次实例主键ID。
+        alias: [班次实例ID, 车次实例ID]
+        sync: false
+
+      - name: train_route_id
+        role: foreign_key
+        description: 线路ID，关联train_routes.id。
+        alias: [线路ID]
+        sync: false
+
+      - name: departure_instance_code
+        role: dimension
+        description: 班次实例编码，业务唯一标识。
+        alias: [班次实例编码]
+        sync: false
+
+      - name: departure_time
+        role: dimension
+        description: 出发时间（发车时间）。
+        alias: [出发时间, 发车时间, 开车时间]
+        sync: false
+
+      - name: arrival_time
+        role: dimension
+        description: 到达时间。
+        alias: [到达时间, 到站时间]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 班次状态，scheduled=已排班，cancelled=已取消，done=已完成。
+        alias: [班次状态, 车次状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: train_seat_inventory
+    role: fact
+    description: 火车席位库存表，存储具体班次下不同席别的库存和价格。
+    columns:
+      - name: id
+        role: primary_key
+        description: 席位库存主键ID。
+        alias: [席位库存ID]
+        sync: false
+
+      - name: train_departure_id
+        role: foreign_key
+        description: 班次实例ID，关联train_departures.id。
+        alias: [班次实例ID]
+        sync: false
+
+      - name: seat_class_code
+        role: dimension
+        description: 席位等级，second_class=二等座，first_class=一等座，business=商务座。
+        alias: [席位等级, 席别, 座位类型]
+        sync: true
+
+      - name: currency_code
+        role: foreign_key
+        description: 币种编码，关联currencies.currency_code。
+        alias: [币种]
+        sync: false
+
+      - name: sale_price_amount
+        role: measure
+        description: 销售价，火车票售价。
+        alias: [销售价, 票价, 火车票价格, 售价]
+        sync: false
+
+      - name: settlement_price_amount
+        role: measure
+        description: 结算价，平台向供应商支付的费用。
+        alias: [结算价]
+        sync: false
+
+      - name: total_inventory
+        role: measure
+        description: 总库存。
+        alias: [总库存, 总座位数]
+        sync: false
+
+      - name: available_inventory
+        role: measure
+        description: 可售库存。
+        alias: [可售库存, 剩余座位, 余票]
+        sync: false
+
+      - name: reserved_inventory
+        role: measure
+        description: 预占库存。
+        alias: [预占库存]
+        sync: false
+
+      - name: sold_inventory
+        role: measure
+        description: 已售库存。
+        alias: [已售库存, 已售票数]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [库存状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  # ==========================================================
+  # 交通域 — 汽车票
+  # ==========================================================
+
+  - name: bus_routes
+    role: dim
+    description: 汽车班线主表，存储班线名称、出发到达站点和城市等信息，用于按汽车线路维度统计订单数据。
+    columns:
+      - name: id
+        role: primary_key
+        description: 汽车班线主键ID。
+        alias: [汽车班线ID]
+        sync: false
+
+      - name: route_code
+        role: dimension
+        description: 班线编码。
+        alias: [班线编码]
+        sync: false
+
+      - name: route_name
+        role: dimension
+        description: 班线名称。
+        alias: [班线名称, 汽车线路, 大巴, 客运线路]
+        sync: true
+
+      - name: supplier_id
+        role: foreign_key
+        description: 供应商ID，关联suppliers.id（supplier_type_code=bus）。
+        alias: [供应商ID]
+        sync: false
+
+      - name: departure_hub_id
+        role: foreign_key
+        description: 出发站点ID，关联transport_hubs.id（hub_type_code=bus_station）。
+        alias: [出发站ID, 始发站ID]
+        sync: false
+
+      - name: arrival_hub_id
+        role: foreign_key
+        description: 到达站点ID，关联transport_hubs.id（hub_type_code=bus_station）。
+        alias: [到达站ID, 终点站ID]
+        sync: false
+
+      - name: departure_area_id
+        role: foreign_key
+        description: 出发城市地区ID，关联areas.id（城市级）。
+        alias: [出发城市ID, 出发地ID]
+        sync: false
+
+      - name: arrival_area_id
+        role: foreign_key
+        description: 到达城市地区ID，关联areas.id（城市级）。
+        alias: [到达城市ID, 目的地ID]
+        sync: false
+
+      - name: duration_minutes
+        role: measure
+        description: 运行时长（分钟）。
+        alias: [运行时长, 行程时间, 耗时]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [班线状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: bus_departures
+    role: fact
+    description: 汽车班次实例表，存储具体发车时间、到达时间等信息。出发时间跨度T-730到T+90。
+    columns:
+      - name: id
+        role: primary_key
+        description: 班次实例主键ID。
+        alias: [班次实例ID]
+        sync: false
+
+      - name: bus_route_id
+        role: foreign_key
+        description: 班线ID，关联bus_routes.id。
+        alias: [班线ID]
+        sync: false
+
+      - name: departure_instance_code
+        role: dimension
+        description: 班次实例编码，业务唯一标识。
+        alias: [班次实例编码]
+        sync: false
+
+      - name: departure_time
+        role: dimension
+        description: 出发时间（发车时间）。
+        alias: [出发时间, 发车时间]
+        sync: false
+
+      - name: arrival_time
+        role: dimension
+        description: 到达时间。
+        alias: [到达时间, 到站时间]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 班次状态，scheduled=已排班，cancelled=已取消，done=已完成。
+        alias: [班次状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: bus_seat_inventory
+    role: fact
+    description: 汽车席位库存表，存储具体班次下席位库存和价格。
+    columns:
+      - name: id
+        role: primary_key
+        description: 席位库存主键ID。
+        alias: [席位库存ID]
+        sync: false
+
+      - name: bus_departure_id
+        role: foreign_key
+        description: 班次实例ID，关联bus_departures.id。
+        alias: [班次实例ID]
+        sync: false
+
+      - name: seat_class_code
+        role: dimension
+        description: 席位等级，coach=大巴。
+        alias: [席位等级, 席别]
+        sync: true
+
+      - name: currency_code
+        role: foreign_key
+        description: 币种编码，关联currencies.currency_code。
+        alias: [币种]
+        sync: false
+
+      - name: sale_price_amount
+        role: measure
+        description: 销售价，汽车票售价。
+        alias: [销售价, 票价, 汽车票价格, 售价]
+        sync: false
+
+      - name: settlement_price_amount
+        role: measure
+        description: 结算价。
+        alias: [结算价]
+        sync: false
+
+      - name: total_inventory
+        role: measure
+        description: 总库存。
+        alias: [总库存, 总座位数]
+        sync: false
+
+      - name: available_inventory
+        role: measure
+        description: 可售库存。
+        alias: [可售库存, 剩余座位, 余票]
+        sync: false
+
+      - name: reserved_inventory
+        role: measure
+        description: 预占库存。
+        alias: [预占库存]
+        sync: false
+
+      - name: sold_inventory
+        role: measure
+        description: 已售库存。
+        alias: [已售库存, 已售票数]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [库存状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  # ==========================================================
+  # 交通域 — 接送服务
+  # ==========================================================
+
+  - name: transfer_services
+    role: dim
+    description: 接送服务主表，存储接机、送机、包车等服务定义和基础信息，用于按接送服务维度统计订单数据。
+    columns:
+      - name: id
+        role: primary_key
+        description: 接送服务主键ID。
+        alias: [接送服务ID]
+        sync: false
+
+      - name: service_code
+        role: dimension
+        description: 服务编码。
+        alias: [服务编码]
+        sync: false
+
+      - name: service_name
+        role: dimension
+        description: 服务名称。
+        alias: [接送服务名称, 接送服务, 接送, 接机, 送机, 包车]
+        sync: true
+
+      - name: service_type_code
+        role: dimension
+        description: 服务类型，airport_pickup=机场接机，airport_dropoff=机场送机，charter_daily=包车一日游，station_transfer=车站接送。
+        alias: [服务类型, 接送类型]
+        sync: true
+
+      - name: area_id
+        role: foreign_key
+        description: 服务城市地区ID，关联areas.id（城市级）。
+        alias: [服务城市ID, 服务地区]
+        sync: false
+
+      - name: vehicle_type_code
+        role: dimension
+        description: 车型，economy=经济型，comfort=舒适型，business=商务型，van=商务车。
+        alias: [车型, 车辆类型, 车型分类]
+        sync: true
+
+      - name: passenger_capacity
+        role: measure
+        description: 最大载客人数。
+        alias: [载客人数, 最大乘客数, 容量]
+        sync: false
+
+      - name: supplier_id
+        role: foreign_key
+        description: 供应商ID，关联suppliers.id（supplier_type_code=transfer）。
+        alias: [供应商ID, 接送供应商]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [服务状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: transfer_service_area_rules
+    role: dim
+    description: 接送服务区域规则表，维护上下车区域组合的定价规则。
+    columns:
+      - name: id
+        role: primary_key
+        description: 规则主键ID。
+        alias: [规则ID]
+        sync: false
+
+      - name: transfer_service_id
+        role: foreign_key
+        description: 接送服务ID，关联transfer_services.id。
+        alias: [接送服务ID]
+        sync: false
+
+      - name: pickup_area_id
+        role: foreign_key
+        description: 上车地区ID，关联areas.id（城市级）。
+        alias: [上车城市ID, 接客地区ID]
+        sync: false
+
+      - name: dropoff_area_id
+        role: foreign_key
+        description: 下车地区ID，关联areas.id（城市级）。
+        alias: [下车城市ID, 送客地区ID]
+        sync: false
+
+      - name: price_amount
+        role: measure
+        description: 承定价，该上下车组合的结算价格。
+        alias: [价格, 定价, 承定价]
+        sync: false
+
+      - name: min_price_amount
+        role: measure
+        description: 最低价，平台保底价。
+        alias: [最低价, 保底价, 底价]
+        sync: false
+
+      - name: rule_payload
+        role: dimension
+        description: 扩展规则，JSON格式，如夜间费、节假日费等附加规则。
+        alias: [附加规则, 费用规则]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [规则状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: transfer_capacity_calendar
+    role: fact
+    description: 接送运力日历表，存储接送服务按天的容量与售卖快照。业务日期跨度T-730到T+90。
+    columns:
+      - name: id
+        role: primary_key
+        description: 运力日历主键ID。
+        alias: [日历ID]
+        sync: false
+
+      - name: transfer_service_id
+        role: foreign_key
+        description: 接送服务ID，关联transfer_services.id。
+        alias: [接送服务ID]
+        sync: false
+
+      - name: business_date
+        role: dimension
+        description: 业务日期。
+        alias: [业务日期, 服务日期]
+        sync: false
+
+      - name: total_inventory
+        role: measure
+        description: 总运力。
+        alias: [总运力, 总库存]
+        sync: false
+
+      - name: available_inventory
+        role: measure
+        description: 可售运力。
+        alias: [可售运力, 可用运力, 剩余车辆]
+        sync: false
+
+      - name: reserved_inventory
+        role: measure
+        description: 预占运力。
+        alias: [预占运力]
+        sync: false
+
+      - name: sold_inventory
+        role: measure
+        description: 已售运力。
+        alias: [已售运力, 已售出车辆数]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [运力状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  # ==========================================================
+  # 营销域
+  # ==========================================================
+
+  - name: coupon_templates
+    role: dim
+    description: 优惠券模板表，定义优惠券的发放规则和使用条件，包含酒店满减、景点折扣等多种券类型。
+    columns:
+      - name: id
+        role: primary_key
+        description: 模板主键ID。
+        alias: [模板ID]
+        sync: false
+
+      - name: template_code
+        role: dimension
+        description: 模板编码，业务唯一标识。
+        alias: [模板编码, 券模板编码]
+        sync: false
+
+      - name: template_name
+        role: dimension
+        description: 模板名称。
+        alias: [模板名称, 券模板名称, 优惠券名称]
+        sync: true
+
+      - name: coupon_type_code
+        role: dimension
+        description: 券类型，如HOTEL_ROOM_CASH=酒店满减券，SCENIC_TICKET_DISCOUNT=景点折扣券等。
+        alias: [券类型, 优惠券类型, 券种类]
+        sync: true
+
+      - name: applicable_product_type
+        role: dimension
+        description: 适用商品类型，如hotel_room、scenic_ticket、flight_cabin等。
+        alias: [适用商品, 适用类型, 可用商品类型]
+        sync: true
+
+      - name: applicable_supplier_id
+        role: foreign_key
+        description: 适用供应商ID，关联suppliers.id，空表示不限。
+        alias: [适用供应商ID]
+        sync: false
+
+      - name: currency_code
+        role: foreign_key
+        description: 货币编码，关联currencies.currency_code。
+        alias: [币种]
+        sync: false
+
+      - name: min_spend_amount
+        role: measure
+        description: 最低消费金额，使用该券的订单最低消费门槛。
+        alias: [最低消费, 满减门槛, 起用金额]
+        sync: false
+
+      - name: discount_amount
+        role: measure
+        description: 优惠值，现金券为固定减免金额，折扣券为折扣率。
+        alias: [优惠金额, 折扣金额, 减免金额, 面值]
+        sync: false
+
+      - name: max_discount_amount
+        role: measure
+        description: 最高优惠金额，仅折扣类券适用。
+        alias: [最高优惠, 优惠上限, 封顶金额]
+        sync: false
+
+      - name: valid_from
+        role: dimension
+        description: 有效期开始时间。
+        alias: [有效期开始, 生效时间]
+        sync: false
+
+      - name: valid_until
+        role: dimension
+        description: 有效期结束时间。
+        alias: [有效期结束, 失效时间]
+        sync: false
+
+      - name: total_quantity
+        role: measure
+        description: 发放总量。
+        alias: [发放总量, 发行量, 总数量]
+        sync: false
+
+      - name: per_user_limit
+        role: measure
+        description: 每人限领数量。
+        alias: [每人限领, 限领数]
+        sync: false
+
+      - name: rule_payload
+        role: dimension
+        description: 扩展规则，JSON格式，如是否可叠加等。
+        alias: [扩展规则]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [模板状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: user_coupons
+    role: fact
+    description: 用户优惠券表，记录用户实际持有和使用的优惠券实例。
+    columns:
+      - name: id
+        role: primary_key
+        description: 用户券主键ID。
+        alias: [用户券ID]
+        sync: false
+
+      - name: template_id
+        role: foreign_key
+        description: 模板ID，关联coupon_templates.id。
+        alias: [模板ID, 券模板ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 用户ID，关联users.id。
+        alias: [用户ID]
+        sync: false
+
+      - name: coupon_code
+        role: dimension
+        description: 券码，业务唯一标识。
+        alias: [券码, 优惠券码]
+        sync: false
+
+      - name: currency_code
+        role: foreign_key
+        description: 货币编码，继承自模板。
+        alias: [币种]
+        sync: false
+
+      - name: min_spend_amount
+        role: measure
+        description: 最低消费金额，继承自模板。
+        alias: [最低消费, 使用门槛]
+        sync: false
+
+      - name: discount_amount
+        role: measure
+        description: 优惠值，继承自模板。
+        alias: [优惠金额, 面值]
+        sync: false
+
+      - name: max_discount_amount
+        role: measure
+        description: 最高优惠金额，继承自模板。
+        alias: [最高优惠, 优惠上限]
+        sync: false
+
+      - name: valid_from
+        role: dimension
+        description: 有效期开始时间，继承自模板。
+        alias: [有效期开始, 生效时间]
+        sync: false
+
+      - name: valid_until
+        role: dimension
+        description: 有效期结束时间，继承自模板。
+        alias: [有效期结束, 失效时间]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 券状态，available=可用，used=已使用，expired=已过期。
+        alias: [券状态, 使用状态, 优惠券状态]
+        sync: true
+
+      - name: used_at
+        role: dimension
+        description: 使用时间。
+        alias: [使用时间, 核销时间]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 领取时间。
+        alias: [领取时间, 获得时间, 创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: promotions
+    role: dim
+    description: 促销活动表，存储促销活动主数据，支持直接折扣、满减、秒杀、套餐等类型。
+    columns:
+      - name: id
+        role: primary_key
+        description: 活动主键ID。
+        alias: [活动ID, 促销ID]
+        sync: false
+
+      - name: promotion_code
+        role: dimension
+        description: 活动编码，业务唯一标识。
+        alias: [活动编码, 促销编码]
+        sync: false
+
+      - name: promotion_name
+        role: dimension
+        description: 活动名称。
+        alias: [活动名称, 促销名称, 促销活动]
+        sync: true
+
+      - name: promotion_type_code
+        role: dimension
+        description: 活动类型，direct_discount=直降，min_spend_discount=满减，flashsale=秒杀，bundling=套餐。
+        alias: [活动类型, 促销类型]
+        sync: true
+
+      - name: currency_code
+        role: foreign_key
+        description: 货币编码，关联currencies.currency_code。
+        alias: [币种]
+        sync: false
+
+      - name: start_time
+        role: dimension
+        description: 活动开始时间。
+        alias: [开始时间, 活动开始, 生效时间]
+        sync: false
+
+      - name: end_time
+        role: dimension
+        description: 活动结束时间。
+        alias: [结束时间, 活动结束, 截止时间]
+        sync: false
+
+      - name: config_payload
+        role: dimension
+        description: 扩展配置，JSON格式。
+        alias: [活动配置, 扩展配置]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 活动状态，active=有效，inactive=无效，paused=暂停，finished=已结束。
+        alias: [活动状态, 促销状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: promotion_rules
+    role: dim
+    description: 促销规则表，存储促销活动的触发条件和优惠内容。
+    columns:
+      - name: id
+        role: primary_key
+        description: 规则主键ID。
+        alias: [规则ID]
+        sync: false
+
+      - name: promotion_id
+        role: foreign_key
+        description: 促销活动ID，关联promotions.id。
+        alias: [活动ID, 促销ID]
+        sync: false
+
+      - name: rule_name
+        role: dimension
+        description: 规则名称。
+        alias: [规则名称]
+        sync: true
+
+      - name: trigger_type_code
+        role: dimension
+        description: 触发类型，min_spend=满额触发，first_order=首单触发，time_window=时段触发，product_count=数量触发。
+        alias: [触发类型, 触发条件类型]
+        sync: true
+
+      - name: trigger_payload
+        role: dimension
+        description: 触发条件，JSON格式。
+        alias: [触发条件, 条件配置]
+        sync: false
+
+      - name: benefit_type_code
+        role: dimension
+        description: 优惠类型，discount_amount=固定优惠金额，discount_rate=折扣率，gift_item=赠品。
+        alias: [优惠类型, 权益类型]
+        sync: true
+
+      - name: benefit_payload
+        role: dimension
+        description: 优惠内容，JSON格式。
+        alias: [优惠内容, 权益内容]
+        sync: false
+
+      - name: sort_order
+        role: dimension
+        description: 排序顺序。
+        alias: [排序, 优先级]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [规则状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: promotion_bindings
+    role: dim
+    description: 促销绑定表，将促销活动绑定到具体的商品或服务（房型/票种/舱位库存等）。
+    columns:
+      - name: id
+        role: primary_key
+        description: 绑定主键ID。
+        alias: [绑定ID]
+        sync: false
+
+      - name: promotion_id
+        role: foreign_key
+        description: 促销活动ID，关联promotions.id。
+        alias: [活动ID, 促销ID]
+        sync: false
+
+      - name: product_type_code
+        role: dimension
+        description: 商品类型，hotel_room/ scenic_ticket/ flight_cabin/ train_seat/ bus_seat/ transfer_service。
+        alias: [商品类型, 绑定商品类型]
+        sync: true
+
+      - name: target_id
+        role: foreign_key
+        description: 目标商品ID，按product_type_code关联不同商品表。
+        alias: [目标商品ID, 绑定目标]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 状态编码，active=有效，inactive=无效。
+        alias: [绑定状态]
+        sync: true
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  # ==========================================================
+  # 交易与资金域
+  # ==========================================================
+
+  - name: orders
+    role: fact
+    description: 订单主表，存储订单汇总金额、订单状态、渠道和时间等核心交易信息，支持的订单类型包括酒店、景点门票、机票、火车票、汽车票和接送服务。
+    columns:
+      - name: id
+        role: primary_key
+        description: 订单主键ID。
+        alias: [订单ID]
+        sync: false
+
+      - name: order_no
+        role: dimension
+        description: 订单号，业务唯一标识。
+        alias: [订单号, 订单编号]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 下单用户ID，关联users.id。
+        alias: [用户ID, 下单用户]
+        sync: false
+
+      - name: order_type_code
+        role: dimension
+        description: 订单类型，hotel_room=酒店，scenic_ticket=景点门票，flight_cabin=机票，train_seat=火车票，bus_seat=汽车票，transfer_service=接送服务。
+        alias: [订单类型, 商品类型, 业务类型]
+        sync: true
+
+      - name: status_code
+        role: dimension
+        description: 订单状态，pending_payment=待支付，cancelled=已取消，paid=已支付，in_progress=进行中，finished=已结束。
+        alias: [订单状态, 状态]
+        sync: true
+
+      - name: currency_code
+        role: foreign_key
+        description: 货币编码，关联currencies.currency_code。
+        alias: [币种, 货币]
+        sync: false
+
+      - name: goods_amount
+        role: measure
+        description: 商品总金额。
+        alias: [商品金额, 订单金额, 原价, 商品总价]
+        sync: false
+
+      - name: marketing_discount_amount
+        role: measure
+        description: 营销优惠金额（含促销活动优惠）。
+        alias: [营销优惠, 促销优惠, 活动优惠]
+        sync: false
+
+      - name: coupon_discount_amount
+        role: measure
+        description: 优惠券优惠金额。
+        alias: [优惠券优惠, 券优惠, 用券优惠]
+        sync: false
+
+      - name: point_discount_amount
+        role: measure
+        description: 积分抵扣金额。
+        alias: [积分抵扣, 积分优惠]
+        sync: false
+
+      - name: payable_amount
+        role: measure
+        description: 应付金额，等于商品总金额减去所有优惠。
+        alias: [应付金额, 实付金额, 支付金额, 订单收入, 销售额, 收入]
+        sync: false
+
+      - name: paid_amount
+        role: measure
+        description: 实付金额，支付成功后的实际付款金额。
+        alias: [实付金额, 已付金额]
+        sync: false
+
+      - name: refunded_amount
+        role: measure
+        description: 退款金额，订单发生退款时记录。
+        alias: [退款金额, 已退金额]
+        sync: false
+
+      - name: settlement_amount
+        role: measure
+        description: 结算金额，平台与供应商结算的金额，仅finished状态有值。
+        alias: [结算金额, 结算价, 供应结算额]
+        sync: false
+
+      - name: source_channel_code
+        role: foreign_key
+        description: 订单来源渠道编码，关联channels.channel_code。
+        alias: [渠道编码, 来源渠道, 下单渠道]
+        sync: false
+
+      - name: cancel_reason
+        role: dimension
+        description: 取消原因说明文本。
+        alias: [取消原因, 取消说明]
+        sync: true
+
+      - name: paid_at
+        role: dimension
+        description: 支付完成时间。
+        alias: [支付时间, 付款时间]
+        sync: false
+
+      - name: finalized_at
+        role: dimension
+        description: 订单终结时间，取消或完成时记录。
+        alias: [终结时间, 完结时间, 终态时间]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 订单创建时间。
+        alias: [下单时间, 创建时间, 订单时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: order_items
+    role: fact
+    description: 订单明细表，按购买单元逐条记录订单对应的具体商品类型、商品对象、销售金额和出行时间，用于按商品维度进行精细化分析。
+    columns:
+      - name: id
+        role: primary_key
+        description: 订单明细主键ID。
+        alias: [明细ID]
+        sync: false
+
+      - name: order_id
+        role: foreign_key
+        description: 所属订单ID，关联orders.id。
+        alias: [订单ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 下单用户ID，关联users.id。
+        alias: [用户ID]
+        sync: false
+
+      - name: traveler_id
+        role: foreign_key
+        description: 出行人ID，关联travelers.id，机票/火车票必填。
+        alias: [出行人ID, 旅客ID]
+        sync: false
+
+      - name: product_type_code
+        role: dimension
+        description: 商品类型编码，hotel_room=酒店房型，scenic_ticket=景点票种，flight_cabin=航班舱位，train_seat=火车席位，bus_seat=汽车席位，transfer_service=接送服务。
+        alias: [商品类型, 产品类型]
+        sync: true
+
+      - name: product_id
+        role: foreign_key
+        description: 商品对象ID，按product_type_code关联不同商品表。
+        alias: [商品ID, 产品ID]
+        sync: false
+
+      - name: product_name
+        role: dimension
+        description: 商品名称快照，如"XX酒店-大床房"、"XX景点-成人票"等。
+        alias: [商品名称, 产品名称, 商品]
+        sync: true
+
+      - name: sale_amount
+        role: measure
+        description: 单条明细的销售金额。
+        alias: [售价, 单价, 销售金额]
+        sync: false
+
+      - name: refunded_amount
+        role: measure
+        description: 单条明细的退款金额。
+        alias: [退款金额, 已退金额]
+        sync: false
+
+      - name: settlement_amount
+        role: measure
+        description: 结算金额，无结算时为空。
+        alias: [结算金额, 明细结算额]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 明细状态，pending_payment=待支付，cancelled=已取消，paid=已支付，ticketed=已出票，refunded=已退款，completed=已完成。
+        alias: [明细状态, 商品状态]
+        sync: true
+
+      - name: travel_time
+        role: dimension
+        description: 出行时间，如入住日期或出发时间。
+        alias: [出行时间, 旅行时间, 出发时间]
+        sync: false
+
+      - name: travel_end_time
+        role: dimension
+        description: 出行结束时间，酒店为离店时间，其他商品为空。
+        alias: [出行结束时间, 离店时间, 到达时间]
+        sync: false
+
+      - name: cancelled_at
+        role: dimension
+        description: 取消时间。
+        alias: [取消时间]
+        sync: false
+
+      - name: paid_at
+        role: dimension
+        description: 支付时间。
+        alias: [支付时间]
+        sync: false
+
+      - name: refunded_at
+        role: dimension
+        description: 退款时间。
+        alias: [退款时间]
+        sync: false
+
+      - name: completed_at
+        role: dimension
+        description: 完成时间。
+        alias: [完成时间, 完结时间]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: order_coupon_usages
+    role: fact
+    description: 订单用券记录表，记录订单实际核销的用户优惠券及对应优惠金额。
+    columns:
+      - name: id
+        role: primary_key
+        description: 用券记录主键ID。
+        alias: [用券ID]
+        sync: false
+
+      - name: order_id
+        role: foreign_key
+        description: 订单ID，关联orders.id。
+        alias: [订单ID]
+        sync: false
+
+      - name: order_item_id
+        role: foreign_key
+        description: 订单明细ID，关联order_items.id，空为整单级优惠。
+        alias: [订单明细ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 下单用户ID，关联users.id。
+        alias: [用户ID]
+        sync: false
+
+      - name: template_id
+        role: foreign_key
+        description: 优惠券模板ID，关联coupon_templates.id。
+        alias: [券模板ID]
+        sync: false
+
+      - name: user_coupon_id
+        role: foreign_key
+        description: 用户优惠券ID，关联user_coupons.id。
+        alias: [用户券ID]
+        sync: false
+
+      - name: order_type_code
+        role: dimension
+        description: 订单类型编码，冗余存储。
+        alias: [订单类型]
+        sync: false
+
+      - name: discount_amount
+        role: measure
+        description: 该次用券实际抵扣金额。
+        alias: [抵扣金额, 用券优惠, 券优惠金额]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 用券时间。
+        alias: [用券时间, 核销时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: order_promotion_details
+    role: fact
+    description: 订单促销明细表，记录订单命中的促销活动、促销规则及对应优惠金额。
+    columns:
+      - name: id
+        role: primary_key
+        description: 促销明细主键ID。
+        alias: [促销明细ID]
+        sync: false
+
+      - name: order_id
+        role: foreign_key
+        description: 订单ID，关联orders.id。
+        alias: [订单ID]
+        sync: false
+
+      - name: order_item_id
+        role: foreign_key
+        description: 订单明细ID，关联order_items.id，空为整单级促销。
+        alias: [订单明细ID]
+        sync: false
+
+      - name: order_type_code
+        role: dimension
+        description: 订单类型编码，冗余存储。
+        alias: [订单类型]
+        sync: false
+
+      - name: promotion_id
+        role: foreign_key
+        description: 促销活动ID，关联promotions.id。
+        alias: [促销活动ID, 活动ID]
+        sync: false
+
+      - name: promotion_binding_id
+        role: foreign_key
+        description: 促销绑定ID，关联promotion_bindings.id。
+        alias: [促销绑定ID]
+        sync: false
+
+      - name: promotion_rule_id
+        role: foreign_key
+        description: 促销规则ID，关联promotion_rules.id。
+        alias: [促销规则ID]
+        sync: false
+
+      - name: discount_amount
+        role: measure
+        description: 该次促销实际优惠金额。
+        alias: [促销优惠金额, 活动优惠金额]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: order_point_usages
+    role: fact
+    description: 订单积分使用表，记录订单实际抵扣的积分流水及抵扣金额。
+    columns:
+      - name: id
+        role: primary_key
+        description: 积分使用主键ID。
+        alias: [积分使用ID]
+        sync: false
+
+      - name: order_id
+        role: foreign_key
+        description: 订单ID，关联orders.id。
+        alias: [订单ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 下单用户ID，关联users.id。
+        alias: [用户ID]
+        sync: false
+
+      - name: point_ledger_id
+        role: foreign_key
+        description: 积分流水ID，关联member_point_ledger.id（ledger_type_code=point_redeem）。
+        alias: [积分流水ID]
+        sync: false
+
+      - name: points_used
+        role: measure
+        description: 本次订单抵扣的积分数量。
+        alias: [抵扣积分, 使用积分, 消耗积分]
+        sync: false
+
+      - name: discount_amount
+        role: measure
+        description: 本次积分抵扣金额。
+        alias: [积分抵扣金额, 积分优惠金额]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: payments
+    role: fact
+    description: 支付记录表，存储订单支付单、支付状态、支付方式和支付金额。
+    columns:
+      - name: id
+        role: primary_key
+        description: 支付记录主键ID。
+        alias: [支付记录ID]
+        sync: false
+
+      - name: payment_no
+        role: dimension
+        description: 支付单号。
+        alias: [支付单号]
+        sync: false
+
+      - name: order_id
+        role: foreign_key
+        description: 关联订单ID，关联orders.id。
+        alias: [订单ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 支付用户ID，关联users.id。
+        alias: [用户ID]
+        sync: false
+
+      - name: payment_method_code
+        role: dimension
+        description: 支付方式，alipay=支付宝，wechat=微信支付，unionpay=银联。
+        alias: [支付方式, 付款方式]
+        sync: true
+
+      - name: currency_code
+        role: foreign_key
+        description: 货币编码，关联currencies.currency_code。
+        alias: [币种, 货币]
+        sync: false
+
+      - name: amount
+        role: measure
+        description: 支付金额。
+        alias: [支付金额, 付款金额]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 支付状态，pending=待支付，success=支付成功，failed=支付失败，closed=已关闭。
+        alias: [支付状态, 付款状态]
+        sync: true
+
+      - name: paid_at
+        role: dimension
+        description: 支付成功时间。
+        alias: [支付时间, 付款时间]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: refund_requests
+    role: fact
+    description: 退款申请表，存储按订单明细发起的退款申请，含申请金额、审核金额和状态流转。
+    columns:
+      - name: id
+        role: primary_key
+        description: 退款申请主键ID。
+        alias: [退款申请ID]
+        sync: false
+
+      - name: refund_request_no
+        role: dimension
+        description: 退款申请单号，业务唯一标识。
+        alias: [退款申请单号, 退款单号]
+        sync: false
+
+      - name: order_id
+        role: foreign_key
+        description: 订单ID，关联orders.id。
+        alias: [订单ID]
+        sync: false
+
+      - name: order_item_id
+        role: foreign_key
+        description: 订单明细ID，关联order_items.id。
+        alias: [订单明细ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 用户ID，关联users.id。
+        alias: [用户ID]
+        sync: false
+
+      - name: requested_amount
+        role: measure
+        description: 申请退款金额。
+        alias: [申请金额, 退款申请金额]
+        sync: false
+
+      - name: approved_amount
+        role: measure
+        description: 审核通过金额。
+        alias: [审核金额, 批准金额, 通过金额]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 退款申请状态，pending=待处理，approved=审核通过，rejected=审核驳回，success=退款完成。
+        alias: [退款申请状态, 退款审核状态]
+        sync: true
+
+      - name: requested_at
+        role: dimension
+        description: 退款申请时间。
+        alias: [申请时间, 退款申请时间]
+        sync: false
+
+      - name: processed_at
+        role: dimension
+        description: 退款处理时间。
+        alias: [处理时间, 审核时间]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+  - name: refund_records
+    role: fact
+    description: 退款记录表，存储退款申请审核通过后的实际打款记录，包含退款金额和退款状态。
+    columns:
+      - name: id
+        role: primary_key
+        description: 退款记录主键ID。
+        alias: [退款记录ID]
+        sync: false
+
+      - name: refund_no
+        role: dimension
+        description: 退款流水号，业务唯一标识。
+        alias: [退款流水号, 退款单号, 退款编号]
+        sync: false
+
+      - name: refund_request_id
+        role: foreign_key
+        description: 退款申请ID，关联refund_requests.id。
+        alias: [退款申请ID]
+        sync: false
+
+      - name: order_id
+        role: foreign_key
+        description: 关联订单ID，关联orders.id。
+        alias: [订单ID]
+        sync: false
+
+      - name: order_item_id
+        role: foreign_key
+        description: 关联订单明细ID，关联order_items.id。
+        alias: [订单明细ID]
+        sync: false
+
+      - name: user_id
+        role: foreign_key
+        description: 退款用户ID，关联users.id。
+        alias: [用户ID]
+        sync: false
+
+      - name: payment_id
+        role: foreign_key
+        description: 支付记录ID，关联payments.id。
+        alias: [支付记录ID]
+        sync: false
+
+      - name: currency_code
+        role: foreign_key
+        description: 货币编码，关联currencies.currency_code。
+        alias: [币种, 货币]
+        sync: false
+
+      - name: amount
+        role: measure
+        description: 退款金额。
+        alias: [退款金额, 退款额]
+        sync: false
+
+      - name: status_code
+        role: dimension
+        description: 退款状态，pending=退款处理中，success=退款成功，failed=退款失败。
+        alias: [退款状态]
+        sync: true
+
+      - name: processed_at
+        role: dimension
+        description: 退款完成时间。
+        alias: [退款完成时间, 退款到账时间, 处理时间]
+        sync: false
+
+      - name: created_at
+        role: dimension
+        description: 创建时间。
+        alias: [创建时间]
+        sync: false
+
+      - name: updated_at
+        role: dimension
+        description: 更新时间。
+        alias: [更新时间]
+        sync: false
+
+
+# ==========================================================
+# 业务指标定义
+# ==========================================================
+
+metrics:
+  - name: 订单量
+    description: 订单总数量，统计所有已创建的订单数，可按订单状态（待支付/已支付/已取消/已完成）、订单类型（酒店/景点/机票/火车票/汽车票/接送）、时间范围和地区等维度筛选。
+    relevant_columns:
+      - orders.id
+      - orders.order_type_code
+      - orders.status_code
+      - orders.created_at
+    alias: [订单数, 订单总量, 下单量, 订单总数]
+
+  - name: 销售总额
+    description: 所有已完成订单的应付金额总和，即用户实际需要支付的金额（商品总金额减去营销优惠、优惠券优惠和积分抵扣）。仅统计状态为finished的订单。
+    relevant_columns:
+      - orders.payable_amount
+      - orders.status_code
+      - orders.paid_at
+    alias: [销售额, 收入, 总营收, 交易额, GMV]
+
+  - name: 退款总额
+    description: 所有退款成功的退款记录金额总和，反映售后退款规模。仅统计status_code=success的退款记录。
+    relevant_columns:
+      - refund_records.amount
+      - refund_records.status_code
+    alias: [退款额, 退款总金额, 退单金额]
+
+  - name: 优惠总额
+    description: 所有订单的优惠金额总和，包括营销优惠金额、优惠券优惠金额和积分抵扣金额。
+    relevant_columns:
+      - orders.marketing_discount_amount
+      - orders.coupon_discount_amount
+      - orders.point_discount_amount
+    alias: [优惠金额, 折扣总额, 减免金额]
+
+  - name: 平均客单价
+    description: 平均每单支付金额（AOV），等于销售总额除以已完成订单数。仅统计状态为finished的订单。
+    relevant_columns:
+      - orders.payable_amount
+      - orders.id
+      - orders.status_code
+    alias: [客单价, AOV, 平均订单金额, 人均消费]
+
+  - name: 退款率
+    description: 退款订单数占总订单数的比例。分子为发生过退款的订单数（refunded_amount>0且status_code=finished），分母为所有finished订单数。
+    relevant_columns:
+      - orders.id
+      - orders.refunded_amount
+      - orders.status_code
+    alias: [退款比例, 退单率, 退款订单占比]
+
+  - name: 核销率
+    description: 已使用优惠券数占已领取优惠券总数的比例。分子为status_code=used的用户券数，分母为所有用户券数。
+    relevant_columns:
+      - user_coupons.id
+      - user_coupons.status_code
+    alias: [用券率, 优惠券使用率, 券核销率]
+
+  - name: 会员转化率
+    description: VIP用户（含silver和gold）占总用户数的比例。仅统计status_code=normal或vip的活跃用户。
+    relevant_columns:
+      - member_accounts.member_level_code
+      - users.status_code
+    alias: [VIP占比, 会员占比, 高级会员率]
+
+  - name: 平均入住晚数
+    description: 酒店订单的平均入住天数。通过order_items中product_type_code=hotel_room的travel_end_time与travel_time之差计算。
+    relevant_columns:
+      - order_items.product_type_code
+      - order_items.travel_time
+      - order_items.travel_end_time
+    alias: [平均住宿天数, 平均入住天数, 平均住宿晚数]
+
+  - name: 库存占用率
+    description: 已售库存占总库存的比例，用于衡量各类商品库存利用效率。按商品类型分别统计。
+    relevant_columns:
+      - hotel_room_daily.total_inventory
+      - hotel_room_daily.sold_inventory
+      - scenic_ticket_daily.total_inventory
+      - scenic_ticket_daily.sold_inventory
+      - flight_cabin_inventory.total_inventory
+      - flight_cabin_inventory.sold_inventory
+    alias: [库存利用率, 售罄率, 库存售出比]
